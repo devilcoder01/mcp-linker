@@ -1,7 +1,7 @@
 use std::process::Command;
 
 mod uv_installer;
-use uv_installer::install_uv_by_curl;
+
 
 #[tauri::command]
 pub fn install_command(
@@ -60,6 +60,7 @@ pub fn install_command(
 
         // If brew is not available and it's a UV installation request, fall back to curl
         if package_name == "uv" || manager.contains("curl") {
+            use uv_installer::install_uv_by_curl;
             return install_uv_by_curl();
         }
 
@@ -134,11 +135,8 @@ pub fn install_command(
 #[tauri::command]
 pub fn check_command_exists(command: String) -> Result<bool, String> {
     let exists = match std::env::consts::OS {
-        "windows" => Command::new("powershell")
-            .args(&[
-                "-Command",
-                &format!("Get-Command {} -ErrorAction SilentlyContinue", command),
-            ])
+        "windows" => Command::new("cmd")
+            .args(&["/C", "where", &command])
             .output()
             .map(|output| output.status.success())
             .unwrap_or(false),
@@ -151,4 +149,3 @@ pub fn check_command_exists(command: String) -> Result<bool, String> {
 
     Ok(exists)
 }
-
